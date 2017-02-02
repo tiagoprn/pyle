@@ -21,5 +21,4 @@ class Link(models.Model):
     notes = models.TextField(blank=True, null=True)
     content = models.TextField(blank=True, null=True)
     content_last_updated_at = models.DateTimeField(blank=True, null=True)
-    tags = models.ManyToManyField(Tag)
-
+    tags = models.ManyToManyField(Tag, blank=True, null=True)
