@@ -25,6 +25,22 @@ class LinkSerializer(serializers.HyperlinkedModelSerializer):
         )
 
 
+class TagSerializer(serializers.HyperlinkedModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
+    links = serializers.HyperlinkedRelatedField(many=True, read_only=True,
+                                                view_name='link-detail')  # Link.tags related_name=links
+
+    class Meta:
+        model = Tag
+        fields = (
+            'owner',
+            'url',
+            'name',
+            'created',
+            'links',
+        )
+
+
 class LinkShortenedSerializer(serializers.HyperlinkedModelSerializer):
     # This is used to serialize the links with less information than "LinkSerializer".
     class Meta:
@@ -42,22 +58,6 @@ class TagShortenedSerializer(serializers.HyperlinkedModelSerializer):
         fields = (
             'url',
             'name',
-        )
-
-
-class TagSerializer(serializers.HyperlinkedModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')
-    links = serializers.HyperlinkedRelatedField(many=True, read_only=True,
-                                                view_name='link-detail')  # Link.tags related_name=links
-
-    class Meta:
-        model = Tag
-        fields = (
-            'owner',
-            'url',
-            'name',
-            'created',
-            'links',
         )
 
 
