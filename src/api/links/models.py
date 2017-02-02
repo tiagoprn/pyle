@@ -22,3 +22,9 @@ class Link(models.Model):
     content = models.TextField(blank=True, null=True)
     content_last_updated_at = models.DateTimeField(blank=True, null=True)
     tags = models.ManyToManyField(Tag, blank=True, null=True)
+
+    class Meta:
+        ordering = ('-created',)
+
+    def __str__(self):
+        return self.name or self.url
