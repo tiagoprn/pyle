@@ -7,7 +7,7 @@
     $ python manage.py createsuperuser (this user will be used to login to the API, which will support permissions on a few iterations on the future).
     $ python manage.py runserver
 
-Access ```http://localhost:8000/``` to get a WebUI to navigate through the API (to login, use the credentials you entered at ```createsuperuser``` above).
+Access ```http://localhost:8000/``` to get a WebUI to navigate through the API. Click on  "login", on the upper right, and use the credentials you entered at ```createsuperuser``` above).
 
 To post a link, e.g.: 
 
