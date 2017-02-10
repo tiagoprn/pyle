@@ -31,3 +31,5 @@ Later on, there are plans to move it to React.
 - TELEGRAM BOT: A bot that can be used to post new links on your collection. It
   also consumes the REST API. 
 
+# How to run the API Server
+
