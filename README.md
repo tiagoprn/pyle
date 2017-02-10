@@ -33,3 +33,4 @@ Later on, there are plans to move it to React.
 
 # How to run the API Server
 
+See [https://github.com/tiagoprn/pyle/tree/master/src/api].
