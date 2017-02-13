@@ -4,10 +4,12 @@ from django.db import models
 class Tag(models.Model):
     owner = models.ForeignKey('auth.User', related_name='tags', on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
-    name = models.CharField(max_length=200, unique=True)
+    name = models.CharField(max_length=200)
 
     class Meta:
         ordering = ('name',)
+        index_together = [['owner', 'name'],
+                          ['owner', 'created']]
 
     def __str__(self):
         return self.name
@@ -16,7 +18,7 @@ class Tag(models.Model):
 class Link(models.Model):
     owner = models.ForeignKey('auth.User', related_name='links', on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
-    uri = models.URLField(unique=True)
+    uri = models.URLField()
     name = models.CharField(max_length=200, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     content = models.TextField(blank=True, null=True)
@@ -28,6 +30,11 @@ class Link(models.Model):
 
     class Meta:
         ordering = ('-created',)
+        unique_together = (('owner', 'uri'),)
+        index_together = [['owner', 'uri'],
+                          ['owner', 'name'],
+                          ['owner', 'created'],
+                          ['owner', 'content_last_updated_at']]
 
     def __str__(self):
         return self.name or self.url
