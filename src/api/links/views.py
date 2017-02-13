@@ -8,7 +8,7 @@ from rest_framework.reverse import reverse
 from rest_framework.throttling import ScopedRateThrottle
 
 from .models import Link, Tag
-# from .permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly
 from .serializers import (LinkSerializer,
                           TagSerializer,
                           UserSerializer)
@@ -41,6 +41,13 @@ class TagList(generics.ListCreateAPIView):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     name = 'tag-list'
+    permission_classes = (
+        permissions.IsAuthenticatedOrReadOnly,
+        IsOwnerOrReadOnly
+    )
+    filter_fields = ('name', 'created', 'owner')
+    search_fields = ('name', 'created', 'owner')
+    ordering_fields = ('-created',)
 
     def perform_create(self, serializer):
         # Pass an additional owner field to the create method,
@@ -52,12 +59,23 @@ class TagDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     name = 'tag-detail'
+    permission_classes = (
+        permissions.IsAuthenticatedOrReadOnly,
+        IsOwnerOrReadOnly
+    )
 
 
 class LinkList(generics.ListCreateAPIView):
     queryset = Link.objects.all()
     serializer_class = LinkSerializer
     name = 'link-list'
+    permission_classes = (
+        permissions.IsAuthenticatedOrReadOnly,
+        IsOwnerOrReadOnly
+    )
+    filter_fields = ('name', 'created', 'owner', 'uri')
+    search_fields = ('name', 'created', 'owner', 'uri')
+    ordering_fields = ('-created',)
 
     def perform_create(self, serializer):
         # Pass an additional owner field to the create method,
@@ -69,6 +87,10 @@ class LinkDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Link.objects.all()
     serializer_class = LinkSerializer
     name = 'link-detail'
+    permission_classes = (
+        permissions.IsAuthenticatedOrReadOnly,
+        IsOwnerOrReadOnly
+    )
 
 
 class ApiRoot(generics.GenericAPIView):
@@ -79,4 +101,4 @@ class ApiRoot(generics.GenericAPIView):
             'links': reverse(LinkList.name, request=request),
             'tags': reverse(TagList.name, request=request),
             'users': reverse(UserList.name, request=request)
-})
+        })
