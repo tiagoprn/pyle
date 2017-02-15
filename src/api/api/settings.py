@@ -151,7 +151,7 @@ NOSE_ARGS = [
     '--with-coverage',
     '--cover-erase',  # erase results from the previous run
     '--cover-inclusive',  # includes all files under the working directory (raise te coverage report accuracy)
-    '--cover-package=games',  # the apps we want to cover
+    '--cover-package=links',  # the apps we want to cover
 ]
 
 LOGGING = {
