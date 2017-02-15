@@ -1,2 +1,6 @@
+- Manually create a token (as a management command in the future):
+
+    http://getblimp.github.io/django-rest-framework-jwt/#creating-a-new-token-manually
+
 - Implement the tests.
 
