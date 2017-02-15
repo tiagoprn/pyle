@@ -49,9 +49,9 @@ Then, click the "POST" button. If successful it will post the JSON of the create
     
     $ curl -X POST -H "Content-Type: application/json" -d '{"token":"MY_GIANT_TOKEN_HERE"}' http://localhost:8000/api-token-verify/
     
-## Manually create a token: (must be added as a management command in the future)
+## Manually create a token: 
 
-http://getblimp.github.io/django-rest-framework-jwt/#creating-a-new-token-manually
+    $ python manage.py generate_token [username]
 
 ## How to access a protected resource: 
 
