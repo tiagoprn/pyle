@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
+import datetime
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -140,9 +141,14 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
     ),
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '1/second',
+        'anon': '10/second',
         'user': '60/second'
     }
+}
+
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=30),
+    'JWT_AUTH_HEADER_PREFIX': 'JWT'  # You can change here, e.g., to "Bearer", which is required by some clients
 }
 
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
@@ -152,6 +158,8 @@ NOSE_ARGS = [
     '--cover-erase',  # erase results from the previous run
     '--cover-inclusive',  # includes all files under the working directory (raise te coverage report accuracy)
     '--cover-package=links',  # the apps we want to cover
+    '--nocapture',  # do not "eat" stdout
+    '--nologcapture'  # do not "eat" the logs
 ]
 
 LOGGING = {

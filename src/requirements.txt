@@ -5,3 +5,5 @@ django-filter
 django-crispy-forms
 coverage
 django-nose
+ipdbplugin  # for ipdb support on test failures
+ipdb
