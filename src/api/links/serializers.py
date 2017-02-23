@@ -89,6 +89,17 @@ class TagSerializer(serializers.HyperlinkedModelSerializer):
             'links',
         )
 
+    def create(self, validated_data):
+        # If the user tries to create a tag which already exists,
+        # I will just return the existing one.
+        instance = Tag.objects.filter(name=validated_data['name']).first()
+        if instance:
+            tag = instance
+        else:
+            tag = Tag.objects.create(**validated_data)
+        return tag
+
+
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     tags = TagShortenedSerializer(many=True, read_only=True)  # Tag.owner related_name=tags
