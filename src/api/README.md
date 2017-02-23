@@ -57,4 +57,4 @@ Then, click the "POST" button. If successful it will post the JSON of the create
 
     $ curl -iX POST -H "Authorization: JWT [YOUR-GIANT-JWT-TOKEN-HERE]" -H "Content-Type: application/json" -d '{"name":"awesome"}' http://localhost:8000/tags
 
-** NOTE: If you try to create a token for the same user and JWT_EXPIRATION_DELTA (settings.py) has not been reached, the token issued will be equal to the previous one.
+** NOTE: Each time you request a new token, a new one is created. It will be expired after JWT_EXPIRATION_DELTA (settings.py).
