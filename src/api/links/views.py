@@ -1,10 +1,11 @@
 import json
 
 from django.contrib.auth.models import User
+from django.http import JsonResponse
 
 from rest_framework.views import exception_handler
 
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
@@ -112,12 +113,19 @@ def api_500_handler(exception, context):
     except Exception:
         detail = 'EXCEPTION: {}'.format(str(exception))
 
-    payload = {'detail': detail}
+    payload = {'error': detail}
     if response:
         payload['status_code'] = response.status_code
 
-    response = Response(
+    return Response(
         payload,
-        content_type="application/json", status=500
+        content_type="application/json",
+        status=status.HTTP_500_INTERNAL_SERVER_ERROR
     )
-    return response
+
+
+def api_404_handler(request):
+    payload = {'error': 'resource not found, check its path.',
+               'status_code': 404}
+
+    return JsonResponse(payload, status=404)

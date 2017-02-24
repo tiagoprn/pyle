@@ -18,6 +18,10 @@ from django.contrib import admin
 
 from rest_framework_jwt.views import obtain_jwt_token, verify_jwt_token
 
+from links.views import api_404_handler
+
+handler404 = api_404_handler
+
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api_auth/', include('rest_framework.urls'), name='api_auth'),
