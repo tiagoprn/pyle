@@ -90,15 +90,10 @@ class LinkTests(APITestCase):
         response1, user1 = self.create_link('1', '1')
         self.assertEqual(response1.status_code, status.HTTP_201_CREATED)
         response2, user2 = self.create_link('1', '1')
-        self.assertEqual(response2.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Link.objects.count(), 1)
-        self.assertEqual(Tag.objects.count(), 2)
+        self.assertEqual(response2.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-
-
+    # TODO: adapt the tests below from "TAG" to "LINK".
     '''
-
     def test_retrieve_tag_list(self):
         first_tag_name = 'Some'
         self.create_tag(first_tag_name, '1')
