@@ -55,6 +55,7 @@ Then, click the "POST" button. If successful it will post the JSON of the create
 
 ## How to access a protected resource: 
 
-    $ curl -iX POST -H "Authorization: JWT [YOUR-GIANT-JWT-TOKEN-HERE]" -H "Content-Type: application/json" -d '{"name":"awesome"}' http://localhost:8000/tags
+    $ curl -iX POST -H "Authorization: JWT [YOUR-GIANT-JWT-TOKEN-HERE]" -H "Content-Type: application/json" -d '{"name":"awesome"}' http://localhost:8000/tags/
+    $ curl -iX POST -H "Authorization: JWT [YOUR-GIANT-JWT-TOKEN-HERE]" -H "Content-Type: application/json" -d '{"uri": "http://link1.com","name": "link1","notes": "","content": "","content_last_updated_at": null,"tags": [{"name": "first"}, {"name": "second"}]}' http://localhost:8000/links/
 
 ** NOTE: Each time you request a new token, a new one is created. It will be expired after JWT_EXPIRATION_DELTA (settings.py).

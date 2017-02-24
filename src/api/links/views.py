@@ -1,11 +1,12 @@
+import json
+
 from django.contrib.auth.models import User
 
-from django_filters import NumberFilter, DateTimeFilter, AllValuesFilter
+from rest_framework.views import exception_handler
 
-from rest_framework import filters, generics, permissions
+from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
-from rest_framework.throttling import ScopedRateThrottle
 
 from .models import Link, Tag
 from .permissions import IsOwnerOrReadOnly
@@ -102,3 +103,21 @@ class ApiRoot(generics.GenericAPIView):
             'tags': reverse(TagList.name, request=request),
             'users': reverse(UserList.name, request=request)
         })
+
+
+def api_500_handler(exception, context):
+    response = exception_handler(exception, context)
+    try:
+        detail = response.data['detail']
+    except Exception:
+        detail = 'EXCEPTION: {}'.format(str(exception))
+
+    payload = {'detail': detail}
+    if response:
+        payload['status_code'] = response.status_code
+
+    response = Response(
+        payload,
+        content_type="application/json", status=500
+    )
+    return response

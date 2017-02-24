@@ -24,9 +24,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '*0)qa#f*8c8a+k5y!ik8a$f@4vbc$w#6cnk-f-2f#%7&*xc_5q'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1']
 
 
 # Application definition
@@ -123,6 +123,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'links.views.api_500_handler',
     'DEFAULT_PAGINATION_CLASS': 'links.pagination.LimitOffsetPaginationWithMaxLimit',
     'PAGE_SIZE': 15,
     'DEFAULT_FILTER_BACKENDS': (
