@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
 from .models import Link, Tag
-from .permissions import IsOwnerOrReadOnly
+from .permissions import IsOwner
 from .serializers import (LinkSerializer,
                           TagSerializer,
                           UserSerializer)
@@ -44,8 +44,9 @@ class TagList(generics.ListCreateAPIView):
     serializer_class = TagSerializer
     name = 'tag-list'
     permission_classes = (
-        permissions.IsAuthenticatedOrReadOnly,
-        IsOwnerOrReadOnly
+        permissions.IsAdminUser,
+        permissions.IsAuthenticated,
+        IsOwner
     )
     filter_fields = ('name', 'created', 'owner')
     search_fields = ('name', 'created', 'owner')
@@ -62,8 +63,9 @@ class TagDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TagSerializer
     name = 'tag-detail'
     permission_classes = (
-        permissions.IsAuthenticatedOrReadOnly,
-        IsOwnerOrReadOnly
+        permissions.IsAdminUser,
+        permissions.IsAuthenticated,
+        IsOwner
     )
 
 
@@ -72,8 +74,9 @@ class LinkList(generics.ListCreateAPIView):
     serializer_class = LinkSerializer
     name = 'link-list'
     permission_classes = (
-        permissions.IsAuthenticatedOrReadOnly,
-        IsOwnerOrReadOnly
+        permissions.IsAdminUser,
+        permissions.IsAuthenticated,
+        IsOwner
     )
     filter_fields = ('name', 'created', 'owner', 'uri')
     search_fields = ('name', 'created', 'owner', 'uri')
@@ -90,8 +93,9 @@ class LinkDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = LinkSerializer
     name = 'link-detail'
     permission_classes = (
-        permissions.IsAuthenticatedOrReadOnly,
-        IsOwnerOrReadOnly
+        permissions.IsAdminUser,
+        permissions.IsAuthenticated,
+        IsOwner
     )
 
 

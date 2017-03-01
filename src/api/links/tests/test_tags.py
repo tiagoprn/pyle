@@ -26,7 +26,7 @@ class TagTests(APITestCase):
               'is_staff': True}
     }
 
-    def create_admin_user(self, user_number):
+    def create_user(self, user_number):
         user = User(username=self.users[user_number]['username'],
                     email=self.users[user_number]['email'],
                     is_staff=self.users[user_number]['is_staff'])
@@ -43,7 +43,7 @@ class TagTests(APITestCase):
 
     def create_tag(self, name, user_number):
         user = User.objects.filter(username=self.users[user_number][
-            'username']).first() or self.create_admin_user(user_number)
+            'username']).first() or self.create_user(user_number)
 
         token = self.create_token_for_user(user_number)
         self.client.login(username=self.users[user_number]['username'],
@@ -97,9 +97,10 @@ class TagTests(APITestCase):
     def test_delete_tag(self):
         new_tag_name = 'Initial'
         response, user = self.create_tag(new_tag_name, '1')
+        self.assertEqual(Tag.objects.count(), 1)
         url = response.data['url']
-        patch_response = self.client.delete(url, format='json')
-        self.assertEqual(patch_response.status_code, status.HTTP_204_NO_CONTENT)
+        delete_response = self.client.delete(url, format='json')
+        self.assertEqual(delete_response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Tag.objects.count(), 0)
 
     def test_filter_tag_by_name(self):

@@ -1,2 +1,7 @@
 - Implement the tests.
 
+- The users created are all admin users (is_staff), so the permissions are working.
+Create the same set of tests with a normal user (non-admin).
+
+- On the permissions, make sure a user cannot see another user tags and links.
+

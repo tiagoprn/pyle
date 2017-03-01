@@ -19,11 +19,11 @@ class LinkTests(APITestCase):
         '1': {'username': 'first',
               'email': 'first@first.com',
               'password': 'aBc12345',
-              'is_staff': True},
+              'is_staff': True},  # Admin User
         '2': {'username': 'second',
               'email': 'second@second.com',
               'password': 'BcD23456',
-              'is_staff': True}
+              'is_staff': True}   # Admin User
     }
 
     links = {
@@ -45,7 +45,7 @@ class LinkTests(APITestCase):
         }
     }
 
-    def create_admin_user(self, user_number):
+    def create_user(self, user_number):
         user = User(username=self.users[user_number]['username'],
                     email=self.users[user_number]['email'],
                     is_staff=self.users[user_number]['is_staff'])
@@ -62,7 +62,7 @@ class LinkTests(APITestCase):
 
     def create_link(self, user_number, link_number):
         user = User.objects.filter(username=self.users[user_number][
-            'username']).first() or self.create_admin_user(user_number)
+            'username']).first() or self.create_user(user_number)
 
         token = self.create_token_for_user(user_number)
         self.client.login(username=self.users[user_number]['username'],
@@ -84,7 +84,7 @@ class LinkTests(APITestCase):
         self.assertEqual(Tag.objects.count(), 2)
         tags = Tag.objects.all()
         for index, tag in enumerate(tags):
-            assert tag.name == self.links['1']['tags'][index]['name']
+            self.assertEqual(tag.name, self.links['1']['tags'][index]['name'])
 
     def test_create_duplicated_link(self):
         response1, user1 = self.create_link('1', '1')
@@ -92,50 +92,48 @@ class LinkTests(APITestCase):
         response2, user2 = self.create_link('1', '1')
         self.assertEqual(response2.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    # TODO: adapt the tests below from "TAG" to "LINK".
-    '''
-    def test_retrieve_tag_list(self):
-        first_tag_name = 'Some'
-        self.create_tag(first_tag_name, '1')
-        second_tag_name = 'Any'
-        self.create_tag(second_tag_name, '2')
-        url = reverse('tag-list')
+    def test_retrieve_link_list(self):
+        self.create_link('1', '1')
+        self.create_link('2', '2')
+        url = reverse('link-list')
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 2)
-        # Remember: tags are brought on alphabetical order
-        self.assertEqual(response.data['results'][0]['name'], second_tag_name)
+        # Remember: tags are brought most-recent-first
+        self.assertEqual(response.data['results'][0]['name'], 'link2')
         self.assertEqual(response.data['results'][0]['owner'], self.users['2']['username'])
-        self.assertEqual(response.data['results'][1]['name'], first_tag_name)
+        self.assertEqual(response.data['results'][1]['name'], 'link1')
         self.assertEqual(response.data['results'][1]['owner'], self.users['1']['username'])
 
-    def test_update_tag(self):
-        new_tag_name = 'Initial'
-        response, user = self.create_tag(new_tag_name, '1')
-        url = response.data['url']
-        updated_tag_name = 'InitialUPDATED'
-        data = {'name': updated_tag_name}
+    def test_update_link(self):
+        response1, user1 = self.create_link('1', '1')
+        response2, user2 = self.create_link('2', '2')
+
+        url = response1.data['url']
+        new_link_name = 'link1 UPDATED'
+
+        data = {'name': new_link_name}
+        self.client.login(username=self.users['1']['username'],
+                          password=self.users['1']['password'])
         patch_response = self.client.patch(url, data, format='json')
+
         self.assertEqual(patch_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(patch_response.data['name'], updated_tag_name)
+        self.assertEqual(patch_response.data['name'], new_link_name)
 
-    def test_delete_tag(self):
-        new_tag_name = 'Initial'
-        response, user = self.create_tag(new_tag_name, '1')
+    def test_delete_link(self):
+        response, user = self.create_link('2', '2')
+        self.assertEqual(Link.objects.count(), 1)
         url = response.data['url']
-        patch_response = self.client.delete(url, format='json')
-        self.assertEqual(patch_response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(Tag.objects.count(), 0)
+        delete_response = self.client.delete(url, format='json')
+        self.assertEqual(delete_response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Link.objects.count(), 0)
 
-    def test_filter_tag_by_name(self):
-        tag_name1 = 'First'
-        self.create_tag(tag_name1, '1')
-        tag_name2 = 'Second'
-        self.create_tag(tag_name2, '1')
-        filter_by_name = {'name': tag_name1}
-        url = '{}?{}'.format(reverse('tag-list'), urlencode(filter_by_name))
+    def test_filter_link_by_name(self):
+        self.create_link('1', '1')
+        self.create_link('2', '2')
+        filter_by_name = {'name': self.links['1']['name']}
+        url = '{}?{}'.format(reverse('link-list'), urlencode(filter_by_name))
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 1)
-        self.assertEqual(response.data['results'][0]['name'], tag_name1)
-    '''
+        self.assertEqual(response.data['results'][0]['name'], self.links['1']['name'])

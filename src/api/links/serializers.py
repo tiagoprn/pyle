@@ -61,7 +61,10 @@ class LinkSerializer(serializers.HyperlinkedModelSerializer):
         return link
 
     def update(self, instance, validated_data):
-        tags_data = validated_data.pop('tags')
+        try:
+            tags_data = validated_data.pop('tags')
+        except:
+            tags_data = {}
         for item in validated_data:
             if Link._meta.get_field(item):
                 setattr(instance, item, validated_data[item])
