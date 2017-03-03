@@ -153,3 +153,38 @@ class LinkTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(response.data['results'][0]['name'], self.links['1']['name'])
+
+    def test_should_not_retrieve_other_user_links(self):
+        self.create_link('1', '1')
+        self.create_link('1', '2')
+        self.assertEqual(Link.objects.count(), 2)
+        url = reverse('link-list')
+        auth_header, user = self.get_authorization_header_with_token_and_user_instance('2')
+        sleep(0.1)  # FIXME: This looks like cheating, check why it is necessary
+        response = self.client.get(url, format='json', **auth_header)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 0)
+
+    def test_should_not_update_other_user_link(self):
+        response, user = self.create_link('1', '1')
+        self.assertEqual(Link.objects.count(), 1)
+
+        url = response.data['url']
+        new_link_name = 'link1 UPDATED'
+        data = {'name': new_link_name}
+
+        auth_header, user = self.get_authorization_header_with_token_and_user_instance('2')
+        sleep(0.1)  # FIXME: This looks like cheating, check why it is necessary
+        patch_response = self.client.patch(url, data, format='json', **auth_header)
+
+        self.assertEqual(patch_response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def test_should_not_delete_other_user_link(self):
+        response, user = self.create_link('2', '2')
+        self.assertEqual(Link.objects.count(), 1)
+        url = response.data['url']
+        auth_header, user = self.get_authorization_header_with_token_and_user_instance('1')
+        sleep(0.1)  # FIXME: This looks like cheating, check why it is necessary
+        delete_response = self.client.delete(url, format='json', **auth_header)
+        self.assertEqual(delete_response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(Link.objects.count(), 1)

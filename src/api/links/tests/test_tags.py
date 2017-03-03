@@ -130,7 +130,6 @@ class TagTests(APITestCase):
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(response.data['results'][0]['name'], tag_name1)
 
-
     def test_should_not_list_other_users_tags(self):
         self.create_tag('First', '1')
         self.create_tag('Second', '2')
