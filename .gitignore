@@ -2,6 +2,6 @@ __pycache__
 *.pyc
 *~
 .idea
-*.log
+*.log*
 db.sqlite3
 .coverage

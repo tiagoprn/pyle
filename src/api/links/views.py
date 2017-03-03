@@ -40,17 +40,21 @@ class UserDetail(generics.RetrieveAPIView):
 
 
 class TagList(generics.ListCreateAPIView):
-    queryset = Tag.objects.all()
+    queryset = Tag.objects.all()  # Although we bring all here, below on "get_queryset" we filter by the current user
     serializer_class = TagSerializer
     name = 'tag-list'
     permission_classes = (
-        permissions.IsAdminUser,
         permissions.IsAuthenticated,
         IsOwner
     )
     filter_fields = ('name', 'created', 'owner')
     search_fields = ('name', 'created', 'owner')
     ordering_fields = ('-created',)
+
+    def get_queryset(self):
+        queryset = super(TagList, self).get_queryset()
+        if self.request.user:
+            return queryset.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
         # Pass an additional owner field to the create method,
@@ -63,18 +67,16 @@ class TagDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TagSerializer
     name = 'tag-detail'
     permission_classes = (
-        permissions.IsAdminUser,
         permissions.IsAuthenticated,
         IsOwner
     )
 
 
 class LinkList(generics.ListCreateAPIView):
-    queryset = Link.objects.all()
+    queryset = Link.objects.all()  # Although we bring all here, below on "get_queryset" we filter by the current user
     serializer_class = LinkSerializer
     name = 'link-list'
     permission_classes = (
-        permissions.IsAdminUser,
         permissions.IsAuthenticated,
         IsOwner
     )
@@ -93,7 +95,6 @@ class LinkDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = LinkSerializer
     name = 'link-detail'
     permission_classes = (
-        permissions.IsAdminUser,
         permissions.IsAuthenticated,
         IsOwner
     )
