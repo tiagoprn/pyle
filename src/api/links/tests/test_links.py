@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from time import sleep
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -19,11 +20,15 @@ class LinkTests(APITestCase):
         '1': {'username': 'first',
               'email': 'first@first.com',
               'password': 'aBc12345',
-              'is_staff': True},  # Admin User
+              'is_staff': True},
         '2': {'username': 'second',
               'email': 'second@second.com',
               'password': 'BcD23456',
-              'is_staff': True}   # Admin User
+              'is_staff': True},
+        '3': {'username': 'no-admin',
+              'email': 'no@admin.com',
+              'password': 'cDe34567',
+              'is_staff': False}
     }
 
     links = {
@@ -54,22 +59,27 @@ class LinkTests(APITestCase):
         return user
 
     def create_token_for_user(self, user_number):
+        user = User.objects.filter(username=self.users[user_number][
+            'username']).first() or self.create_user(user_number)
+
         url = reverse('api-token-auth')
         data = {'username': self.users[user_number]['username'],
                 'password': self.users[user_number]['password']}
         response = self.client.post(url, data, format='json')
-        return response.data['token']
+        return response.data.get('token', ''), user
+
+    def get_authorization_header_with_token_and_user_instance(self, user_number):
+        # The header name must be "HTTP_AUTHORIZATION" for the django test client,
+        # simply "Authorization" like with curl won't work.
+        token, user = self.create_token_for_user(user_number)
+        return {'HTTP_AUTHORIZATION': 'JWT {}'.format(token)}, user
 
     def create_link(self, user_number, link_number):
-        user = User.objects.filter(username=self.users[user_number][
-            'username']).first() or self.create_user(user_number)
-
-        token = self.create_token_for_user(user_number)
-        self.client.login(username=self.users[user_number]['username'],
-                          password=self.users[user_number]['password'])
+        auth_header, user = self.get_authorization_header_with_token_and_user_instance(user_number)
+        sleep(0.1)  # FIXME: This looks like cheating, check why it is necessary
         url = reverse('link-list')
         data = self.links[link_number]
-        response = self.client.post(url, data, format='json')
+        response = self.client.post(url, data, format='json', **auth_header)
         return response, user
 
     def test_create_and_retrieve_links(self):
@@ -94,28 +104,30 @@ class LinkTests(APITestCase):
 
     def test_retrieve_link_list(self):
         self.create_link('1', '1')
-        self.create_link('2', '2')
+        self.create_link('1', '2')
         url = reverse('link-list')
-        response = self.client.get(url, format='json')
+        auth_header, user = self.get_authorization_header_with_token_and_user_instance('1')
+        sleep(0.1)  # FIXME: This looks like cheating, check why it is necessary
+        response = self.client.get(url, format='json', **auth_header)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 2)
         # Remember: tags are brought most-recent-first
         self.assertEqual(response.data['results'][0]['name'], 'link2')
-        self.assertEqual(response.data['results'][0]['owner'], self.users['2']['username'])
+        self.assertEqual(response.data['results'][0]['owner'], self.users['1']['username'])
         self.assertEqual(response.data['results'][1]['name'], 'link1')
         self.assertEqual(response.data['results'][1]['owner'], self.users['1']['username'])
 
     def test_update_link(self):
         response1, user1 = self.create_link('1', '1')
-        response2, user2 = self.create_link('2', '2')
+        self.create_link('2', '2')
 
         url = response1.data['url']
         new_link_name = 'link1 UPDATED'
 
         data = {'name': new_link_name}
-        self.client.login(username=self.users['1']['username'],
-                          password=self.users['1']['password'])
-        patch_response = self.client.patch(url, data, format='json')
+        auth_header, user = self.get_authorization_header_with_token_and_user_instance('1')
+        sleep(0.1)  # FIXME: This looks like cheating, check why it is necessary
+        patch_response = self.client.patch(url, data, format='json', **auth_header)
 
         self.assertEqual(patch_response.status_code, status.HTTP_200_OK)
         self.assertEqual(patch_response.data['name'], new_link_name)
@@ -124,16 +136,20 @@ class LinkTests(APITestCase):
         response, user = self.create_link('2', '2')
         self.assertEqual(Link.objects.count(), 1)
         url = response.data['url']
-        delete_response = self.client.delete(url, format='json')
+        auth_header, user = self.get_authorization_header_with_token_and_user_instance('2')
+        sleep(0.1)  # FIXME: This looks like cheating, check why it is necessary
+        delete_response = self.client.delete(url, format='json', **auth_header)
         self.assertEqual(delete_response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Link.objects.count(), 0)
 
     def test_filter_link_by_name(self):
         self.create_link('1', '1')
-        self.create_link('2', '2')
+        self.create_link('1', '2')
         filter_by_name = {'name': self.links['1']['name']}
         url = '{}?{}'.format(reverse('link-list'), urlencode(filter_by_name))
-        response = self.client.get(url, format='json')
+        auth_header, user = self.get_authorization_header_with_token_and_user_instance('1')
+        sleep(0.1)  # FIXME: This looks like cheating, check why it is necessary
+        response = self.client.get(url, format='json', **auth_header)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(response.data['results'][0]['name'], self.links['1']['name'])

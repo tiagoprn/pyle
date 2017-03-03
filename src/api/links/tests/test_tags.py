@@ -11,9 +11,6 @@ from rest_framework.test import APITestCase
 
 from links.models import Tag, Link
 
-# TODO: Test with 2 users, one that owns and other not the specific resources.
-# TODO: Make sure to login with self.client.login() for the permissions to be verified.
-
 
 class TagTests(APITestCase):
     users = {

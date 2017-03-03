@@ -84,6 +84,11 @@ class LinkList(generics.ListCreateAPIView):
     search_fields = ('name', 'created', 'owner', 'uri')
     ordering_fields = ('-created',)
 
+    def get_queryset(self):
+        queryset = super(LinkList, self).get_queryset()
+        if self.request.user:
+            return queryset.filter(owner=self.request.user)
+
     def perform_create(self, serializer):
         # Pass an additional owner field to the create method,
         # to set the owner to the user received in the request
