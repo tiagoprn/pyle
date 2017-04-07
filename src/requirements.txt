@@ -8,3 +8,4 @@ django-nose
 ipdbplugin  # for ipdb support on test failures
 ipdb
 freezegun  # to mock datetime.now
+telepot
