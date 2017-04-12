@@ -1,7 +1,8 @@
+from telepot.delegate import pave_event_space, per_chat_id, create_open
+
 import os
-import time
-import random
 import datetime
+
 import telepot
 
 """
@@ -12,29 +13,46 @@ Then, create a token for it and set as an environment variable:
     $ export PYLE_BOT_TOKEN=your-bot-token-here
 
 Available commands:
-- `/roll` - reply with a random integer between 1 and 6, like rolling a dice.
-- `/time` - reply with the current time, like a clock.
+    - `/hi` - reply with the current time.
+    
+Reference: http://telepot.readthedocs.io/en/latest/    
 """
 
 BOT_TOKEN = os.environ.get('PYLE_BOT_TOKEN', '')
+BOT_TOKEN_NOT_FOUND_MESSAGE = '''
+    Environment variable BOT_TOKEN not set. You must e.g..:
+        $ export PYLE_BOT_TOKEN=your-bot-token-here
+'''
+AVAILABLE_COMMANDS = [
+    '/hi'
+]
 
 
-def handle(msg):
-    chat_id = msg['chat']['id']
-    chat_user = msg['chat']['first_name']
-    command = msg['text']
+class MessageHandler(telepot.helper.ChatHandler):
+    def __init__(self, *args, **kwargs):
+        super(MessageHandler, self).__init__(*args, **kwargs)
 
-    print('msg: {}'.format(repr(msg)))
+    def on_chat_message(self, msg):
+        # chat_id = msg['chat']['id']
+        chat_user = msg['chat']['first_name']
+        command = msg['text']
 
-    if command == '/hi':
-        bot.sendMessage(chat_id,
-                        'Hi {}, welcome! Now is {}.'.format(chat_user,
-                                                            str(datetime.datetime.now())))
-    
+        print('msg: {}'.format(repr(msg)))
 
-bot = telepot.Bot(BOT_TOKEN)
-bot.message_loop(handle)
-print('I am listening ...')
+        if command == '/hi':
+            self.sender.sendMessage('Hi {}, welcome! Now is {}.'.format(chat_user,
+                                    str(datetime.datetime.now())))
+        else:
+            self.sender.sendMessage(
+                'Sorry {}, I do not recognize this command. '
+                'Available commands: {}'.format(chat_user, ', '.join(AVAILABLE_COMMANDS)))
 
-while 1:
-    time.sleep(10)
+
+def main():
+    bot = telepot.DelegatorBot(BOT_TOKEN, [
+        pave_event_space()(
+            per_chat_id(), create_open, MessageHandler, timeout=10),
+    ])
+    bot.message_loop(run_forever='At your service ...')
+
+main()
