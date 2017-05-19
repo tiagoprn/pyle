@@ -36,7 +36,7 @@ class MessageHandler(telepot.helper.ChatHandler):
         # chat_id = msg['chat']['id']
         chat_user = msg['chat']['first_name']
         command = Command(sender=self.sender, chat_user=chat_user)
-        command.do(msg['text'])
+        command.do(msg)
 
 
 def main():
