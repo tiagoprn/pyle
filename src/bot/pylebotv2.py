@@ -1,9 +1,11 @@
 import os
 import sys
 import time
+
 import telepot
 
-from functools import partial
+from urllib.parse import urlparse
+
 from telepot.loop import MessageLoop
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -26,8 +28,14 @@ BOT_TOKEN_NOT_FOUND_MESSAGE = '''
 def on_chat_message(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
 
+    received_text = msg['text']
+
+    # TODO: If I have sent a url, e.g. sharing from Firefox to Telegram, this will break.
+    # So, I will treat it differently here. Maybe put the url on an sqlite database to
+    # retrieve always the late one entered?
+
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                   [InlineKeyboardButton(text='Press me', callback_data='press')],
+                   [InlineKeyboardButton(text='Press me', callback_data=received_text)],
                ])
 
     bot.sendMessage(chat_id, 'Use inline keyboard', reply_markup=keyboard)
@@ -43,13 +51,11 @@ if not BOT_TOKEN:
 
 try:
     bot = telepot.Bot(BOT_TOKEN)
+    print('At your service...')
     MessageLoop(bot, {'chat': on_chat_message,
-                      'callback_query': on_callback_query}
-                ).run_as_thread()
-    print('Listening ...')
+                      'callback_query': on_callback_query},
 
-    while 1:
-        time.sleep(10)
+                ).run_forever(timeout=10)
 except KeyboardInterrupt:
     print('Finishing by your request. Bye!\n')
     sys.exit(0)
