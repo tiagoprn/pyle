@@ -32,6 +32,7 @@ BOT_TOKEN_NOT_FOUND_MESSAGE = '''
 
 
 class MessageHandler(telepot.helper.ChatHandler):
+    # TODO: refactor based on this:https://github.com/nickoala/telepot/blob/master/examples/callback/lover.py
     def __init__(self, *args, **kwargs):
         super(MessageHandler, self).__init__(*args, **kwargs)
 
