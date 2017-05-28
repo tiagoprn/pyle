@@ -3,6 +3,10 @@ import sys
 import time
 import telepot
 import telepot.helper
+
+from datetime import datetime
+
+from peewee import SqliteDatabase, Model, CharField, DateTimeField, BooleanField, OperationalError
 from telepot.loop import MessageLoop
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 from telepot.delegate import (
@@ -17,6 +21,23 @@ Then, create a token for it and set as an environment variable:
 
     $ export PYLE_BOT_TOKEN=your-bot-token-here
 """
+
+def bootstrap_database():
+    db = SqliteDatabase('pylebot.db')
+    try:
+        db.create_tables([UrlsHistory])
+    except OperationalError as ex:
+        print('Ignorirg exception: {}'.format(ex))
+
+
+class UrlsHistory(Model):
+    url = CharField(primary_key=True)
+    created_at = DateTimeField(default=datetime.now())
+    saved_to_pyle = BooleanField(default=False)
+
+    class Meta:
+        database = SqliteDatabase('pylebot.db')
+
 
 class MessageHandler(telepot.helper.ChatHandler):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[
@@ -55,12 +76,17 @@ def main():
         sys.exit(1)
 
     try:
+        bootstrap_database()
+
         bot = telepot.DelegatorBot(BOT_TOKEN, [
             include_callback_query_chat_id(
                 pave_event_space())(
                     per_chat_id(types=['private']), create_open, MessageHandler, timeout=10),
         ])
-        bot.message_loop(run_forever='At your service ...')
+
+        urls = UrlsHistory.select().order_by('-created_at')
+
+        bot.message_loop(run_forever='At your service. There are {} urls on the history.'.format(urls.count()))
     except KeyboardInterrupt:
         print('Finishing by your request. Bye!\n')
         sys.exit(0)
