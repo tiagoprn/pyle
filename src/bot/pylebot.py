@@ -1,16 +1,18 @@
 import os
 import sys
-import time
+
+import requests
 import telepot
 import telepot.helper
 
 from datetime import datetime
 
-from peewee import SqliteDatabase, Model, CharField, DateTimeField, BooleanField, OperationalError
-from telepot.loop import MessageLoop
+from peewee import (SqliteDatabase, Model, CharField, DateTimeField,
+                    BooleanField, OperationalError)
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
-from telepot.delegate import (
-    per_chat_id, create_open, pave_event_space, include_callback_query_chat_id)
+from telepot.delegate import (per_chat_id, create_open, pave_event_space,
+                              include_callback_query_chat_id)
+from uritools import urisplit
 
 """
 A minimal bot that just ask a question and answer accordingly you asked yes/no.
@@ -46,19 +48,45 @@ class MessageHandler(telepot.helper.ChatHandler):
                ]])
 
     def _ask(self):
-         self.sender.sendMessage('Do you want something?', reply_markup=self.keyboard)
+         self.sender.sendMessage('Do you want something?',
+                                 reply_markup=self.keyboard)
+
+    def is_url(self, input):
+        url = None
+        for text in input.split('\n'):
+            if text.startswith('http'):
+                url = text
+                break
+        return url
+
+    def strip_unnecessary_url_parameters(self, url):
+        parsed = urisplit(url)
+        if parsed.query:
+            # TODO: try to strip a long list of marketing tracking parameters from the url
+            pass
+        else:
+            return parsed
 
     def on_chat_message(self, msg):
+        input = msg['text']
+
+        url = self.is_url(input)
+        print('It IS a url!') if url else print('Sorry, not a URL. I cannot do anything with it.')
+
+        stripped_url = self.strip_unnecessary_url_parameters(url)
+
         self._ask()
 
     def on_callback_query(self, msg):
-        query_id, from_id, query_data = telepot.glance(msg, flavor='callback_query')
+        query_id, from_id, query_data = telepot.glance(msg,
+                                                       flavor='callback_query')
 
         if query_data == 'yes':
             self.sender.sendMessage('I can do it!!')
             self.close()
         else:
-            self.bot.answerCallbackQuery(query_id, text='Ok. But I am going to keep asking.')
+            self.bot.answerCallbackQuery(
+                query_id, text='Ok. But I am going to keep asking.')
             self._ask()
 
     def on_close(self, ex):
@@ -81,12 +109,17 @@ def main():
         bot = telepot.DelegatorBot(BOT_TOKEN, [
             include_callback_query_chat_id(
                 pave_event_space())(
-                    per_chat_id(types=['private']), create_open, MessageHandler, timeout=10),
+                    per_chat_id(types=['private']), create_open,
+                MessageHandler, timeout=10),
         ])
 
         urls = UrlsHistory.select().order_by('-created_at')
 
-        bot.message_loop(run_forever='At your service. There are {} urls on the history.'.format(urls.count()))
+        bot.message_loop(
+            run_forever='At your service. '
+                        'There are {} urls '
+                        'on the history.'.format(urls.count())
+        )
     except KeyboardInterrupt:
         print('Finishing by your request. Bye!\n')
         sys.exit(0)
