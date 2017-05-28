@@ -10,3 +10,4 @@ ipdb
 freezegun  # to mock datetime.now
 telepot
 peewee
+requests
