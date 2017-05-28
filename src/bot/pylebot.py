@@ -68,14 +68,17 @@ class MessageHandler(telepot.helper.ChatHandler):
             return parsed
 
     def on_chat_message(self, msg):
+        # query_id, from_id, query_data = telepot.glance(msg, flavor='chat')
+        # import ipdb; ipdb.set_trace()
+
         input = msg['text']
 
         url = self.is_url(input)
-        print('It IS a url!') if url else print('Sorry, not a URL. I cannot do anything with it.')
-
-        stripped_url = self.strip_unnecessary_url_parameters(url)
-
-        self._ask()
+        if url:
+            stripped_url = self.strip_unnecessary_url_parameters(url)
+            self._ask()
+        else:  # TODO: answer below with self.bot.answerCallbackQuery instead of a print
+            print('Sorry, not a URL. I just accept URLs, so I cannot do anything with it.')
 
     def on_callback_query(self, msg):
         query_id, from_id, query_data = telepot.glance(msg,
