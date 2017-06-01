@@ -47,11 +47,32 @@ class MessageHandler(telepot.helper.ChatHandler):
                    InlineKeyboardButton(text='No.', callback_data='no'),
                ]])
 
-    def _ask(self):
-         self.sender.sendMessage('Do you want something?',
-                                 reply_markup=self.keyboard)
+    def on_chat_message(self, msg):
+        input = msg['text']
 
-    def is_url(self, input):
+        url = self._is_url(input)
+        if url:
+            stripped_url = self._strip_unnecessary_url_parameters(url)
+            self.sender.sendMessage('Do you want me to persist this URL on pyle?',
+                                    reply_markup=self.keyboard)
+        else:
+            message = 'Sorry, not a URL. I just accept URLs, so I cannot do anything with it.'
+            self.sender.sendMessage(message)
+
+    def on_callback_query(self, msg):
+        query_id, from_id, query_data = telepot.glance(msg,
+                                                       flavor='callback_query')
+
+        if query_data == 'yes':
+            self.bot.answerCallbackQuery(query_id, text='Roger roger :)')
+        else:
+            self.bot.answerCallbackQuery(query_id, text='So I will do nothing :(')
+            self.close()
+
+    def on_close(self, ex):
+        print("Closing now... ")
+
+    def _is_url(self, input):
         url = None
         for text in input.split('\n'):
             if text.startswith('http'):
@@ -59,42 +80,13 @@ class MessageHandler(telepot.helper.ChatHandler):
                 break
         return url
 
-    def strip_unnecessary_url_parameters(self, url):
+    def _strip_unnecessary_url_parameters(self, url):
         parsed = urisplit(url)
         if parsed.query:
             # TODO: try to strip a long list of marketing tracking parameters from the url
             pass
         else:
             return parsed
-
-    def on_chat_message(self, msg):
-        # query_id, from_id, query_data = telepot.glance(msg, flavor='chat')
-        # import ipdb; ipdb.set_trace()
-
-        input = msg['text']
-
-        url = self.is_url(input)
-        if url:
-            stripped_url = self.strip_unnecessary_url_parameters(url)
-            self._ask()
-        else:  # TODO: answer below with self.bot.answerCallbackQuery instead of a print
-            print('Sorry, not a URL. I just accept URLs, so I cannot do anything with it.')
-
-    def on_callback_query(self, msg):
-        query_id, from_id, query_data = telepot.glance(msg,
-                                                       flavor='callback_query')
-
-        if query_data == 'yes':
-            self.sender.sendMessage('I can do it!!')
-            self.close()
-        else:
-            self.bot.answerCallbackQuery(
-                query_id, text='Ok. But I am going to keep asking.')
-            self._ask()
-
-    def on_close(self, ex):
-        print("Closing now... ")
-
 
 def main():
     BOT_TOKEN = os.environ.get('PYLE_BOT_TOKEN', '')
