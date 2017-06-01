@@ -61,6 +61,8 @@ class MessageHandler(telepot.helper.ChatHandler):
         url = self._is_url(input)
         if url:
             stripped_url = self._strip_unnecessary_url_parameters(url)
+            # TODO: put stripped_url on SQLite
+            sqlite_id = msg['date']
             self.sender.sendMessage('Do you want me to persist this URL on pyle?',
                                     reply_markup=self.keyboard)
         else:
@@ -72,8 +74,8 @@ class MessageHandler(telepot.helper.ChatHandler):
     def on_callback_query(self, msg):
         query_id, from_id, query_data = telepot.glance(msg,
                                                        flavor='callback_query')
-
         if query_data == 'yes':
+            # TODO: Get the last
             self.bot.answerCallbackQuery(query_id, text='Roger roger :)')
         else:
             self.bot.answerCallbackQuery(query_id, text='So I will do nothing :(')
