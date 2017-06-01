@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 
 import requests
@@ -24,6 +25,14 @@ Then, create a token for it and set as an environment variable:
     $ export PYLE_BOT_TOKEN=your-bot-token-here
 """
 
+BOT_TOKEN = os.environ.get('PYLE_BOT_TOKEN', '')
+BOT_TOKEN_NOT_FOUND_MESSAGE = '''
+    Environment variable BOT_TOKEN not set. You must e.g..:
+        $ export PYLE_BOT_TOKEN=your-bot-token-here
+'''
+URL_REGEX = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+
+
 def bootstrap_database():
     db = SqliteDatabase('pylebot.db')
     try:
@@ -43,20 +52,21 @@ class UrlsHistory(Model):
 
 class MessageHandler(telepot.helper.ChatHandler):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[
-                   InlineKeyboardButton(text='Yes', callback_data='yes'),
-                   InlineKeyboardButton(text='No.', callback_data='no'),
-               ]])
+        InlineKeyboardButton(text='Yes', callback_data='yes'),
+        InlineKeyboardButton(text='No.', callback_data='no'),
+    ]])
 
     def on_chat_message(self, msg):
         input = msg['text']
-
         url = self._is_url(input)
         if url:
             stripped_url = self._strip_unnecessary_url_parameters(url)
             self.sender.sendMessage('Do you want me to persist this URL on pyle?',
                                     reply_markup=self.keyboard)
         else:
-            message = 'Sorry, not a URL. I just accept URLs, so I cannot do anything with it.'
+            message = ('Sorry, not a URL. I just accept URLs '
+                       '(those that start with http[s]), so I cannot do '
+                       'anything with that.')
             self.sender.sendMessage(message)
 
     def on_callback_query(self, msg):
@@ -78,6 +88,12 @@ class MessageHandler(telepot.helper.ChatHandler):
             if text.startswith('http'):
                 url = text
                 break
+        if not url:
+            try:
+                url = re.findall(URL_REGEX, input)[0]
+            except IndexError:
+                pass
+
         return url
 
     def _strip_unnecessary_url_parameters(self, url):
@@ -89,11 +105,6 @@ class MessageHandler(telepot.helper.ChatHandler):
             return parsed
 
 def main():
-    BOT_TOKEN = os.environ.get('PYLE_BOT_TOKEN', '')
-    BOT_TOKEN_NOT_FOUND_MESSAGE = '''
-        Environment variable BOT_TOKEN not set. You must e.g..:
-            $ export PYLE_BOT_TOKEN=your-bot-token-here
-    '''
     if not BOT_TOKEN:
         print(BOT_TOKEN_NOT_FOUND_MESSAGE)
         sys.exit(1)
