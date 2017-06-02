@@ -1,9 +1,5 @@
 ### CHECKLIST
 
-- [ ] When a URL too long is entered (e.g. with marketing tracking parameters like from some newsletters), 
-it should remove these marketing parameters to record the shortest URL possible. These parameters list should 
- be kept on a `const`, aside `BOT_TOKEN` (I could check my newsletters to get an initial list of this tracking parameters.) 
-
 - [ ] There is no way to pass complex data on `keyboard.callback_data` 
       (tried with json.dumps(), a simple string with a '|' on it, and these didn't work). 
       So, Keep a record of the URLs that are entered on a local SQLite database  

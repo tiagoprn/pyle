@@ -1,12 +1,16 @@
+import hashlib
 import os
 import re
 import sys
+import xml
 
 import requests
 import telepot
 import telepot.helper
 
 from datetime import datetime
+
+from bs4 import BeautifulSoup
 
 from peewee import (SqliteDatabase, Model, CharField, DateTimeField,
                     BooleanField, OperationalError)
@@ -98,13 +102,46 @@ class MessageHandler(telepot.helper.ChatHandler):
 
         return url
 
+    def _get_text_from_html(self, html):
+        soup = BeautifulSoup(html)
+
+        # kill all script and style elements
+        for script in soup(["script", "style"]):
+            script.extract()  # rip it out
+
+        # get text
+        text = soup.get_text()
+
+        # break into lines and remove leading and trailing space on each
+        lines = (line.strip() for line in text.splitlines())
+        # break multi-headlines into a line each
+        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        # drop blank lines
+        text = '\n'.join(chunk for chunk in chunks if chunk)
+
+        return text.encode('utf-8')
+
     def _strip_unnecessary_url_parameters(self, url):
         parsed = urisplit(url)
+
         if parsed.query:
-            # TODO: try to strip a long list of marketing tracking parameters from the url
-            pass
-        else:
-            return parsed
+            original_response = requests.get(url)
+
+            original_content = self._get_text_from_html(original_response.content)
+
+            original_md5 = hashlib.md5(original_content).hexdigest()
+
+            url_without_query = '{}://{}{}'.format(parsed.scheme, parsed.authority, parsed.path)
+            no_query_response = requests.get(url_without_query)
+
+            no_query_content = self._get_text_from_html(no_query_response.content)
+
+            no_query_md5 = hashlib.md5(no_query_content).hexdigest()
+
+            if original_md5 == no_query_md5:
+                return url_without_query
+
+        return url
 
 def main():
     if not BOT_TOKEN:

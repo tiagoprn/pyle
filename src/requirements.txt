@@ -12,3 +12,4 @@ telepot
 peewee
 requests
 uritools
+bs4
