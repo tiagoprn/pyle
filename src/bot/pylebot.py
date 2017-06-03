@@ -47,6 +47,8 @@ def bootstrap_database():
         print('Ignorirg exception: {}'.format(ex))
 
 
+# [http://docs.peewee-orm.com/en/latest/peewee/quickstart.html#working-with-existing-databases]()
+
 class UrlsHistory(Model):
     id = BigIntegerField(primary_key=True)
     url = CharField(max_length=255)
