@@ -13,7 +13,7 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 
 from peewee import (SqliteDatabase, Model, CharField, DateTimeField,
-                    BooleanField, OperationalError)
+                    BooleanField, BigIntegerField, OperationalError)
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 from telepot.delegate import (per_chat_id, create_open, pave_event_space,
                               include_callback_query_chat_id)
@@ -46,7 +46,8 @@ def bootstrap_database():
 
 
 class UrlsHistory(Model):
-    url = CharField(primary_key=True)
+    id = BigIntegerField(primary_key=True)
+    url = CharField(max_length=255)
     created_at = DateTimeField(default=datetime.now())
     saved_to_pyle = BooleanField(default=False)
 
@@ -55,20 +56,22 @@ class UrlsHistory(Model):
 
 
 class MessageHandler(telepot.helper.ChatHandler):
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[[
-        InlineKeyboardButton(text='Yes', callback_data='yes'),
-        InlineKeyboardButton(text='No.', callback_data='no'),
-    ]])
 
     def on_chat_message(self, msg):
         input = msg['text']
         url = self._is_url(input)
         if url:
             stripped_url = self._strip_unnecessary_url_parameters(url)
-            # TODO: put stripped_url on SQLite
             sqlite_id = msg['date']
+            # TODO: Usar o redis para guardar as URLs, assim posso remover a chave da memória assim que for persistida.
+
+            # passing sqlite_id here is a trick so I can recover info from the database on handling the callback.
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[[
+                InlineKeyboardButton(text='Yes', callback_data='yes.{}'.format(sqlite_id)),
+                InlineKeyboardButton(text='No', callback_data='no.no'),
+            ]])
             self.sender.sendMessage('Do you want me to persist this URL on pyle?',
-                                    reply_markup=self.keyboard)
+                                    reply_markup=keyboard)
         else:
             message = ('Sorry, not a URL. I just accept URLs '
                        '(those that start with http[s]), so I cannot do '
@@ -78,15 +81,14 @@ class MessageHandler(telepot.helper.ChatHandler):
     def on_callback_query(self, msg):
         query_id, from_id, query_data = telepot.glance(msg,
                                                        flavor='callback_query')
-        if query_data == 'yes':
-            # TODO: Get the last
-            self.bot.answerCallbackQuery(query_id, text='Roger roger :)')
+
+        confirmation, sqlite_id = query_data.split('.')
+
+        if confirmation == 'yes':
+            self.bot.answerCallbackQuery(query_id, text='Roger roger. I will send {} to pyle. :)'.format(sqlite_id))
         else:
             self.bot.answerCallbackQuery(query_id, text='So I will do nothing :(')
             self.close()
-
-    def on_close(self, ex):
-        print("Closing now... ")
 
     def _is_url(self, input):
         url = None
