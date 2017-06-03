@@ -23,9 +23,9 @@ from uritools import urisplit
 """
 A minimal bot that just ask a question and answer accordingly you asked yes/no.
 
-You must register this bot with BotFather. 
+You must register this bot with BotFather.
 
-Then, create a token for it and set as an environment variable: 
+Then, create a token for it and set as an environment variable:
 
     $ export PYLE_BOT_TOKEN=your-bot-token-here
 """
@@ -86,9 +86,9 @@ class MessageHandler(telepot.helper.ChatHandler):
         confirmation, sqlite_id = query_data.split('.')
 
         if confirmation == 'yes':
-            url = 'blablabla'  # # TODO: get the url here from sqlite
+            url = 'url-for-sqlite_id-{}'.format(sqlite_id)  # TODO: get the url here from sqlite
             self.bot.answerCallbackQuery(query_id, text='Sending {} to pyle...'.format(url))
-            response = self.send_to_pyle('the-url-here')
+            response = self.send_to_pyle(url)
             if response == 'error':
                 self.sender.sendMessage('TOO BAD :( I could not send {} to pyle. '
                                         'You could retry manually later.'.format(url))
