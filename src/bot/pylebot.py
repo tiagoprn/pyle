@@ -1,5 +1,6 @@
 import hashlib
 import os
+import random
 import re
 import sys
 import xml
@@ -35,6 +36,7 @@ BOT_TOKEN_NOT_FOUND_MESSAGE = '''
         $ export PYLE_BOT_TOKEN=your-bot-token-here
 '''
 URL_REGEX = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+PYLE_RESPONSES = ['saved', 'duplicated', 'error']
 
 
 def bootstrap_database():
@@ -63,14 +65,13 @@ class MessageHandler(telepot.helper.ChatHandler):
         if url:
             stripped_url = self._strip_unnecessary_url_parameters(url)
             sqlite_id = msg['date']
-            # TODO: Usar o redis para guardar as URLs, assim posso remover a chave da memória assim que for persistida.
 
             # passing sqlite_id here is a trick so I can recover info from the database on handling the callback.
             keyboard = InlineKeyboardMarkup(inline_keyboard=[[
                 InlineKeyboardButton(text='Yes', callback_data='yes.{}'.format(sqlite_id)),
                 InlineKeyboardButton(text='No', callback_data='no.no'),
             ]])
-            self.sender.sendMessage('Do you want me to persist this URL on pyle?',
+            self.sender.sendMessage('Do you want me to send "{}" to pyle?'.format(stripped_url),
                                     reply_markup=keyboard)
         else:
             message = ('Sorry, not a URL. I just accept URLs '
@@ -85,10 +86,25 @@ class MessageHandler(telepot.helper.ChatHandler):
         confirmation, sqlite_id = query_data.split('.')
 
         if confirmation == 'yes':
-            self.bot.answerCallbackQuery(query_id, text='Roger roger. I will send {} to pyle. :)'.format(sqlite_id))
+            url = 'blablabla'  # # TODO: get the url here from sqlite
+            self.bot.answerCallbackQuery(query_id, text='Sending {} to pyle...'.format(url))
+            response = self.send_to_pyle('the-url-here')
+            if response == 'error':
+                self.sender.sendMessage('TOO BAD :( I could not send {} to pyle. '
+                                        'You could retry manually later.'.format(url))
+            elif response == 'saved':
+                self.sender.sendMessage('DONE :) {} is now on pyle.'.format(url))
+            elif response == 'duplicated':
+                self.sender.sendMessage('Nothing to do, {} is already on pyle.'.format(url))
+
         else:
             self.bot.answerCallbackQuery(query_id, text='So I will do nothing :(')
             self.close()
+
+    def send_to_pyle(self, url):
+        # TODO: Must be properly implemented, this is just a mock.
+        response = random.choice(PYLE_RESPONSES)
+        return response
 
     def _is_url(self, input):
         url = None
