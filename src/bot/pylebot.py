@@ -68,7 +68,15 @@ class MessageHandler(telepot.helper.ChatHandler):
             stripped_url = self._strip_unnecessary_url_parameters(url)
             sqlite_id = msg['date']
 
-            # passing sqlite_id here is a trick so I can recover info from the database on handling the callback.
+            exists = UrlsHistory.filter(url=stripped_url).first()
+            if exists:
+                self.sender.sendMessage('NOTHING TO DO. :) {} was already submitted '
+                                        'to pyle, at {}.'.format(stripped_url, exists.created_at))
+                return
+            else:
+                UrlsHistory.create(id=sqlite_id, url=stripped_url)
+
+            # Passing sqlite_id here is a trick so I can recover info from the database on handling the callback.
             keyboard = InlineKeyboardMarkup(inline_keyboard=[[
                 InlineKeyboardButton(text='Yes', callback_data='yes.{}'.format(sqlite_id)),
                 InlineKeyboardButton(text='No', callback_data='no.no'),
@@ -88,19 +96,24 @@ class MessageHandler(telepot.helper.ChatHandler):
         confirmation, sqlite_id = query_data.split('.')
 
         if confirmation == 'yes':
-            url = 'url-for-sqlite_id-{}'.format(sqlite_id)  # TODO: get the url here from sqlite
-            self.bot.answerCallbackQuery(query_id, text='Sending {} to pyle...'.format(url))
+            url = UrlsHistory.get(id=sqlite_id).url
+
+            self.bot.answerCallbackQuery(query_id, text='Sending {} to pyle...'.format(url.id))
             response = self.send_to_pyle(url)
             if response == 'error':
                 self.sender.sendMessage('TOO BAD :( I could not send {} to pyle. '
                                         'You could retry manually later.'.format(url))
+                url.saved_to_pyle = False
             elif response == 'saved':
                 self.sender.sendMessage('DONE :) {} is now on pyle.'.format(url))
+                url.saved_to_pyle = True
             elif response == 'duplicated':
                 self.sender.sendMessage('Nothing to do, {} is already on pyle.'.format(url))
-
+                url.saved_to_pyle = False
+                url.save()
         else:
             self.bot.answerCallbackQuery(query_id, text='So I will do nothing :(')
+            # TODO: delete from the sqlite database
             self.close()
 
     def send_to_pyle(self, url):
