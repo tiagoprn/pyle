@@ -5,6 +5,8 @@
     $ cd api
     $ python manage.py migrate
     $ python manage.py createsuperuser (this user will be used to login to the API, which will support permissions on a few iterations on the future).
+    $ python manage.py collectstatic (this will copy the django-admin/drf console static files to /static)
+    $ cd static && python -m http.server 8088 & (this will run python's http server to serve the static files)
     $ python manage.py runserver
 
 Access ```http://localhost:8000/``` to get a WebUI to navigate through the API. Then, click on  "login", on the upper right, and use the credentials you entered at ```createsuperuser``` above.

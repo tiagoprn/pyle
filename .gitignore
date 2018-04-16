@@ -7,3 +7,4 @@ db.sqlite3
 .coverage
 src/bot/token.txt
 src/bot/pylebot.db
+src/api/static
