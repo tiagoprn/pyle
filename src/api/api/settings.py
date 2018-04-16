@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_filters',
     'rest_framework',
     'links.apps.LinksConfig'
 ]
@@ -49,8 +50,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'links.middleware.ExceptionMiddleware'
+    'django.middleware.clickjacking.XFrameOptionsMiddleware'
 ]
 
 ROOT_URLCONF = 'api.urls'
@@ -124,7 +124,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATIC_URL = 'http://127.0.0.1:8088/'
 
 REST_FRAMEWORK = {
-    'EXCEPTION_HANDLER': 'links.views.api_500_handler',
     'DEFAULT_PAGINATION_CLASS': 'links.pagination.LimitOffsetPaginationWithMaxLimit',
     'PAGE_SIZE': 15,
     'DEFAULT_FILTER_BACKENDS': (

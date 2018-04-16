@@ -114,28 +114,3 @@ class ApiRoot(generics.GenericAPIView):
             'tags': reverse(TagList.name, request=request),
             'users': reverse(UserList.name, request=request)
         })
-
-
-def api_500_handler(exception, context):
-    response = exception_handler(exception, context)
-    try:
-        detail = response.data['detail']
-    except Exception:
-        detail = 'EXCEPTION: {}'.format(str(exception))
-
-    payload = {'error': detail}
-    if response:
-        payload['status_code'] = response.status_code
-
-    return Response(
-        payload,
-        content_type="application/json",
-        status=status.HTTP_500_INTERNAL_SERVER_ERROR
-    )
-
-
-def api_404_handler(request):
-    payload = {'error': 'resource not found, check its path.',
-               'status_code': 404}
-
-    return JsonResponse(payload, status=404)
