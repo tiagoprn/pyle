@@ -42,6 +42,10 @@ Then, click the "POST" button. If successful it will post the JSON of the create
     
 **NOTE: If you try both payloads above, you will see the second one fails (because its trying to recreate the tag "first", and this aparently is not being handled by the LinkSerializer). I'm working on it.**
 
+## Run the test suite: 
+
+    $ python manage.py test
+
 
 ## How to get a token to make api calls: 
 
