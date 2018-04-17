@@ -158,9 +158,9 @@ class TagTests(APITestCase):
 
         auth_header, _ = self.get_authorization_header_with_token_and_user_instance('3')
         sleep(0.1)  # FIXME: This looks like cheating, check why it is necessary
-        patch_response = self.client.patch(url, data, format='json', **auth_header)  # TODO: pass the token here
+        patch_response = self.client.patch(url, data, format='json', **auth_header)
 
-        self.assertEqual(patch_response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(patch_response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_should_not_delete_other_users_tags(self):
         new_tag_name = 'Initial'
@@ -170,4 +170,4 @@ class TagTests(APITestCase):
         auth_header, _ = self.get_authorization_header_with_token_and_user_instance('3')
         sleep(0.1)  # FIXME: This looks like cheating, check why it is necessary
         patch_response = self.client.delete(url, format='json', **auth_header)
-        self.assertEqual(patch_response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(patch_response.status_code, status.HTTP_403_FORBIDDEN)

@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from sqlite3 import IntegrityError
 from time import sleep
 
 from django.conf import settings
@@ -99,7 +100,10 @@ class LinkTests(APITestCase):
     def test_create_duplicated_link(self):
         response1, user1 = self.create_link('1', '1')
         self.assertEqual(response1.status_code, status.HTTP_201_CREATED)
-        response2, user2 = self.create_link('1', '1')
+
+        with self.assertRaises(IntegrityError):
+            response2, user2 = self.create_link('1', '1')
+
         self.assertEqual(response2.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_retrieve_link_list(self):
@@ -177,7 +181,7 @@ class LinkTests(APITestCase):
         sleep(0.1)  # FIXME: This looks like cheating, check why it is necessary
         patch_response = self.client.patch(url, data, format='json', **auth_header)
 
-        self.assertEqual(patch_response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(patch_response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_should_not_delete_other_user_link(self):
         response, user = self.create_link('2', '2')
@@ -186,5 +190,5 @@ class LinkTests(APITestCase):
         auth_header, user = self.get_authorization_header_with_token_and_user_instance('1')
         sleep(0.1)  # FIXME: This looks like cheating, check why it is necessary
         delete_response = self.client.delete(url, format='json', **auth_header)
-        self.assertEqual(delete_response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(delete_response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(Link.objects.count(), 1)
