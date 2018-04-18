@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from sqlite3 import IntegrityError
+from django.db.utils import IntegrityError
 from time import sleep
 
 from django.conf import settings
@@ -103,8 +103,7 @@ class LinkTests(APITestCase):
 
         with self.assertRaises(IntegrityError):
             response2, user2 = self.create_link('1', '1')
-
-        self.assertEqual(response2.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(response2.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_retrieve_link_list(self):
         self.create_link('1', '1')
